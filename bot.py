@@ -4,61 +4,74 @@ import requests
 from PIL import Image
 import pytesseract
 from io import BytesIO
-from datetime import datetime, timedelta
-from supabase import create_client, Client
 from threading import Thread
 from flask import Flask
 from telebot import types
 
-# --- [ 1. KEEP-ALIVE SERVER FOR RENDER ] ---
+# --- [ 1. RENDER အတွက် SERVER ဆောက်မယ် ] ---
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "WinGo Free Bot is Online! ✅"
+    return "WIN GO MASTER BOT IS LIVE! 🟢"
 
-def run_server():
-    # Render port requirement အတွက် 10000 ကို သုံးတာ ပိုအဆင်ပြေတယ်
+def run_flask():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
 # --- [ 2. CONFIGURATION ] ---
 TOKEN = '8641622144:AAGO_f5sc3_V0yho8hTnH_VRX_aH7Xx6BOw'
-SUPABASE_URL = "https://guthvltysxlibetrbisi.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1dGh2bHR5c3hsaWJldHJiaXNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MDg2OTYsImV4cCI6MjA5MDA4NDY5Nn0.7H57Gv7xnB4HkVoV6lZPxZsA9ATp1KfBQF1tulvXIRU"
-
-ADMIN_ACC = "@Dangi_Kan"
-INVITE_LINK = "https://www.6win888.com/#/register?invitationCode=856411134469"
-CHANNEL_LINK = "https://t.me/Dangai_colour"
-
 bot = telebot.TeleBot(TOKEN)
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# --- [ 3. DATABASE & FORMULA LOGIC ] ---
+# Links & Info
+REG_LINK = "https://6lottery.com/#/register?invitationCode=856411134469"
+ACC_OPEN_POST = "https://t.me/Dangai_colour/7"
+TOPUP_POST = "https://t.me/Dangai_colour/10"
+BIND_ACC_POST = "https://t.me/Dangai_colour/8"
+ADMIN_ACC = "@Dangi_Kan"
+
+# --- [ 3. FORMULA LOGIC ] ---
 def get_prediction(history):
     if len(history) < 3: return None, None
-    # Dragon Trend
+    
+    # Formula 1: Dragon Trend (🔴/🟢 ဆက်တိုက်)
     if history[0] == history[1] == history[2]:
-        return history[0].upper(), "Dragon Trend"
-    # ZigZag Strategy
+        return history[0].upper(), "Dragon Trend 🔥"
+    
+    # Formula 2: ZigZag (အလှည့်ကျ)
     if history[0] != history[1] and history[1] != history[2]:
         pred = "SMALL" if history[0] == "Big" else "BIG"
-        return pred, "ZigZag Strategy"
-    return None, None 
+        return pred, "ZigZag Strategy ⚡"
+        
+    return None, None
 
 # --- [ 4. BOT HANDLERS ] ---
+
 @bot.message_handler(commands=['start'])
-def start(message):
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("🔗 Register Now", url=INVITE_LINK))
-    welcome_text = "🤖 **WinGo Free Bot မှ ကြိုဆိုပါတယ်**\n\nScreenshot ပို့ပေးပါ။"
-    bot.send_message(message.chat.id, welcome_text, parse_mode="Markdown", reply_markup=markup)
+def start(m):
+    kb = types.InlineKeyboardMarkup(row_width=1)
+    kb.add(
+        types.InlineKeyboardButton("🎮 Game ဆော့ရန်", url=REG_LINK),
+        types.InlineKeyboardButton("📝 Acc ဖွင့်နည်း", url=ACC_OPEN_POST),
+        types.InlineKeyboardButton("💰 ငွေဖြည့်နည်း", url=TOPUP_POST),
+        types.InlineKeyboardButton("💳 Acc ချိတ်နည်း", url=BIND_ACC_POST),
+        types.InlineKeyboardButton("👨‍💻 Admin Account", url=f"https://t.me/Dangi_Kan")
+    )
+    
+    welcome = (
+        "👋 **WinGo Prediction Bot မှ ကြိုဆိုပါတယ်!**\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "အောက်က ခလုတ်များကို အသုံးပြု၍ လိုအပ်သည်များကို ကြည့်ရှုနိုင်ပါသည်။\n\n"
+        "📸 **မှန်းပေးစေချင်ရင်:**\n"
+        "WinGo Result History ကို Screenshot ရိုက်ပြီး ပို့ပေးပါခင်ဗျာ။ ✨"
+    )
+    bot.send_message(m.chat.id, welcome, parse_mode="Markdown", reply_markup=kb)
 
 @bot.message_handler(content_types=['photo'])
-def handle_prediction(message):
-    status_msg = bot.reply_to(message, "🔍 AI က ဖတ်နေတယ်...")
+def handle_prediction(m):
+    status_msg = bot.reply_to(m, "🔍 **AI က Pattern ကို ဖတ်နေပါတယ်...**")
     try:
-        file_info = bot.get_file(message.photo[-1].file_id)
+        file_info = bot.get_file(m.photo[-1].file_id)
         response = requests.get(f"https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}")
         img = Image.open(BytesIO(response.content))
         raw_text = pytesseract.image_to_string(img)
@@ -70,16 +83,31 @@ def handle_prediction(message):
             elif "Small" in w: history.append("Small")
             
         prediction, logic = get_prediction(history)
-        res = f"🎯 **Next Bet:** {prediction}" if prediction else "⚠️ ကျော်လိုက်ပါ"
-        bot.edit_message_text(res, message.chat.id, status_msg.message_id)
+        
+        if prediction:
+            color_emoji = "🟢 (Green)" if prediction == "SMALL" else "🔴 (Red)"
+            res = (
+                f"🎯 **Next Prediction Result**\n"
+                f"━━━━━━━━━━━━━━━━━━━━\n"
+                f"🎰 **Next Bet:** `{prediction}` {color_emoji}\n"
+                f"🧠 **Logic:** {logic}\n"
+                f"💸 **Strategy:** 3x Martingale\n\n"
+                f"⚠️ **ရှုံးသွားလျှင် 3 ဆတိုးလောင်းပေးပါ** 🚀🚀🚀"
+            )
+        else:
+            res = "⚠️ **Pattern မသေချာသေးပါ။ တစ်ပွဲကျော်လိုက်ပါဦး။**"
+            
+        bot.edit_message_text(res, m.chat.id, status_msg.message_id, parse_mode="Markdown")
     except Exception as e:
-        bot.edit_message_text(f"❌ Error: {e}", message.chat.id, status_msg.message_id)
+        bot.edit_message_text(f"❌ Error: {e}", m.chat.id, status_msg.message_id)
 
-# --- [ 5. EXECUTION ] ---
+# --- [ 5. RUN BOT ] ---
 if __name__ == "__main__":
-    # Server ကို thread နဲ့ run မယ်
-    t = Thread(target=run_server)
+    # Flask ကို နောက်ကွယ်မှာ run မယ်
+    t = Thread(target=run_flask)
+    t.daemon = True
     t.start()
-    # Bot ကို polling စတင်မယ်
+    
+    # Bot Polling စတင်မယ်
     print("Bot is Polling...")
-    bot.infinity_polling(none_stop=True)
+    bot.infinity_polling(timeout=20, long_polling_timeout=10)
