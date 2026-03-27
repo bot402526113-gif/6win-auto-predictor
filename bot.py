@@ -15,7 +15,7 @@ app = Flask('')
 
 @app.route('/')
 def home():
-    return "Legendary Tomato Bot is Online! ✅"
+    return "WinGo Free Bot is Online! ✅"
 
 def run_server():
     app.run(host='0.0.0.0', port=8080)
@@ -23,16 +23,15 @@ def run_server():
 # --- [ 2. CONFIGURATION ] ---
 TOKEN = '8641622144:AAGO_f5sc3_V0yho8hTnH_VRX_aH7Xx6BOw'
 SUPABASE_URL = "https://guthvltysxlibetrbisi.supabase.co"
-SUPABASE_KEY = "YOUR_SUPABASE_KEY_HERE" # မင်းရဲ့ Key အပြည့်အစုံ ပြန်ထည့်ပါ
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1dGh2bHR5c3hsaWJldHJiaXNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MDg2OTYsImV4cCI6MjA5MDA4NDY5Nn0.7H57Gv7xnB4HkVoV6lZPxZsA9ATp1KfBQF1tulvXIRU"
+
 ADMIN_ID = 6513777887
-INVITE_LINK = "https://www.6win333.com/#/register?invitationCode=856411134469"
+ADMIN_ACC = "@Dangi_Kan"
+INVITE_LINK = "https://www.6win888.com/#/register?invitationCode=856411134469"
 CHANNEL_LINK = "https://t.me/Dangai_colour"
 
 bot = telebot.TeleBot(TOKEN)
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-# Global Variables
-is_maintenance = False
 
 # --- [ 3. DATABASE & FORMULA LOGIC ] ---
 def manage_cloud_data(raw_text):
@@ -59,46 +58,29 @@ def get_prediction(history):
             return history[0].upper(), "Double-Double"
     return None, None 
 
-# --- [ 4. ADMIN POWER SERVICES ] ---
-@bot.message_handler(commands=['admin'])
-def admin_panel(message):
-    if message.from_user.id == ADMIN_ID:
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add("📊 Total Patterns", "🛠 Toggle Maintenance")
-        markup.add("📢 Broadcast", "🔙 Exit Admin")
-        bot.send_message(message.chat.id, "👨‍💻 Welcome Master! Admin Panel ဖွင့်ပါပြီ။", reply_markup=markup)
-    else:
-        bot.reply_to(message, "❌ မင်းမှာ Admin Power မရှိပါဘူး။")
-
-@bot.message_handler(func=lambda m: m.text == "🛠 Toggle Maintenance")
-def toggle_maint(message):
-    if message.from_user.id == ADMIN_ID:
-        global is_maintenance
-        is_maintenance = not is_maintenance
-        status = "On 🔴" if is_maintenance else "Off 🟢"
-        bot.send_message(message.chat.id, f"Maintenance Mode is now {status}")
-
-# --- [ 5. BOT HANDLERS ] ---
+# --- [ 4. BOT HANDLERS ] ---
 @bot.message_handler(commands=['start'])
 def start(message):
     markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("🔗 Register Now", url=INVITE_LINK))
-    markup.add(types.InlineKeyboardButton("📢 Channel", url=CHANNEL_LINK))
+    markup.add(types.InlineKeyboardButton("🔗 Register Now (Account ဖွင့်ရန်)", url=INVITE_LINK))
+    markup.add(types.InlineKeyboardButton("📢 Join Channel (Link)", url=CHANNEL_LINK))
     
     welcome_text = (
-        "🎰 **Legendary Tomato VIP Predictor**\n\n"
+        "🤖 **WinGo Free Bot မှ ကြိုဆိုပါတယ်**\n"
+        "----------------------------------\n"
         "📸 **အသုံးပြုနည်း:**\n"
-        "Result History ဇယားကို Screenshot ရိုက်ပို့ပေးပါ။\n\n"
-        "💰 **Strategy:** 3x Martingale (100 > 300 > 900)"
+        "6Win Game ထဲက WinGo (1min) ရဲ့ **Result History** ဇယားကို Screenshot ရိုက်ပြီး ပို့ပေးပါ။ AI က Pattern ကို ဖတ်ပြီး နောက်တစ်ပွဲကို ခန့်မှန်းပေးပါလိမ့်မယ်။\n\n"
+        "💰 **ဆတိုးထိုးနည်း (Money Management):**\n"
+        "ရှုံးရင် အောက်ပါအတိုင်း 3 ဆ တိုးထိုးပါ -\n"
+        "👉 **100 > 300 > 900 > 2700 > 8100**\n\n"
+        f"👨‍💻 **Admin:** {ADMIN_ACC}\n"
+        "----------------------------------"
     )
     bot.send_message(message.chat.id, welcome_text, parse_mode="Markdown", reply_markup=markup)
 
 @bot.message_handler(content_types=['photo'])
 def handle_prediction(message):
-    if is_maintenance and message.from_user.id != ADMIN_ID:
-        return bot.reply_to(message, "🛠 Bot ကို ပြင်ဆင်နေလို့ ခဏနားထားပါတယ်။ ခဏနေမှ ပြန်ပို့ပေးပါ။")
-
-    status_msg = bot.reply_to(message, "🔍 AI စနစ်က Pattern ကို ဖတ်နေပါတယ်...")
+    status_msg = bot.reply_to(message, "🔍 AI စနစ်က Pattern ကို ဖတ်နေပါတယ်၊ ခဏစောင့်ပါ...")
     try:
         file_info = bot.get_file(message.photo[-1].file_id)
         response = requests.get(f"https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}")
@@ -115,20 +97,25 @@ def handle_prediction(message):
         prediction, logic = get_prediction(history)
         
         if prediction:
-            res = (f"🎯 **NEXT BET:** 【 **{prediction}** 】\n"
+            res = (f"🎯 **WinGo Next Prediction** 🎯\n"
+                   f"------------------------------\n"
+                   f"🔥 **Next Bet:** 【 **{prediction}** 】\n"
                    f"🧠 **Logic:** {logic}\n"
-                   f"💰 **Strategy:** 3x Martingale\n\n"
+                   f"💹 **Strategy:** 3x Martingale\n"
+                   f"------------------------------\n"
                    f"🔗 [Register Now]({INVITE_LINK})")
         else:
-            res = "⚠️ **Risk များနေတယ်၊ တစ်ပွဲ Out ပါ**"
+            res = "⚠️ **Risk များနေတယ်၊ တစ်ပွဲ Out ပါ**\n\nဒီ Pattern က ခန့်မှန်းရခက်နေလို့ အခုတစ်ပွဲကို ကျော်လိုက်ပါ။ ပုံအသစ်ပြန်ပို့ပေးပါ။"
         
         bot.edit_message_text(res, message.chat.id, status_msg.message_id, parse_mode="Markdown", disable_web_page_preview=True)
     except Exception as e:
-        bot.edit_message_text(f"❌ Error: {e}", message.chat.id, status_msg.message_id)
+        if "tesseract" in str(e).lower():
+            bot.edit_message_text("❌ Error: စက်ထဲမှာ ပုံဖတ်စနစ် (Tesseract) ထည့်မထားရသေးပါ။ Render Environment မှာ APT_PACKAGES ထည့်ပေးပါ။", message.chat.id, status_msg.message_id)
+        else:
+            bot.edit_message_text(f"❌ Error: {e}", message.chat.id, status_msg.message_id)
 
-# --- [ 6. EXECUTION ] ---
+# --- [ 5. EXECUTION ] ---
 if __name__ == "__main__":
     t = Thread(target=run_server)
     t.start()
-    print("Bot & Keep-Alive Server Started... ✅")
     bot.polling(none_stop=True)
