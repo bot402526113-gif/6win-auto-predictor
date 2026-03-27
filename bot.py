@@ -8,22 +8,20 @@ from threading import Thread
 from flask import Flask
 from telebot import types
 
-# --- [ 1. RENDER အတွက် SERVER ဆောက်မယ် ] ---
+# --- [ 1. SERVER FOR RENDER ] ---
 app = Flask(__name__)
-
 @app.route('/')
-def home():
-    return "WIN GO MASTER BOT IS LIVE! 🟢"
+def home(): return "WIN GO BOT IS ONLINE 🟢"
 
-def run_flask():
+def run_server():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
-# --- [ 2. CONFIGURATION ] ---
+# --- [ 2. CONFIG & LINKS ] ---
 TOKEN = '8641622144:AAGO_f5sc3_V0yho8hTnH_VRX_aH7Xx6BOw'
 bot = telebot.TeleBot(TOKEN)
 
-# Links & Info
+# Links
 REG_LINK = "https://6lottery.com/#/register?invitationCode=856411134469"
 ACC_OPEN_POST = "https://t.me/Dangai_colour/7"
 TOPUP_POST = "https://t.me/Dangai_colour/10"
@@ -54,22 +52,21 @@ def start(m):
         types.InlineKeyboardButton("🎮 Game ဆော့ရန်", url=REG_LINK),
         types.InlineKeyboardButton("📝 Acc ဖွင့်နည်း", url=ACC_OPEN_POST),
         types.InlineKeyboardButton("💰 ငွေဖြည့်နည်း", url=TOPUP_POST),
-        types.InlineKeyboardButton("💳 Acc ချိတ်နည်း", url=BIND_ACC_POST),
-        types.InlineKeyboardButton("👨‍💻 Admin Account", url=f"https://t.me/Dangi_Kan")
+        types.InlineKeyboardButton("💳 Acc ချိတ်နည်း (ငွေထုတ်/သွင်း)", url=BIND_ACC_POST),
+        types.InlineKeyboardButton("👨‍💻 Admin Account", url=f"https://t.me/{ADMIN_ACC.replace('@','')}")
     )
     
     welcome = (
-        "👋 **WinGo Prediction Bot မှ ကြိုဆိုပါတယ်!**\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
+        "👋 **WinGo Prediction Bot မှ ကြိုဆိုပါတယ်!**\n\n"
         "အောက်က ခလုတ်များကို အသုံးပြု၍ လိုအပ်သည်များကို ကြည့်ရှုနိုင်ပါသည်။\n\n"
         "📸 **မှန်းပေးစေချင်ရင်:**\n"
-        "WinGo Result History ကို Screenshot ရိုက်ပြီး ပို့ပေးပါခင်ဗျာ။ ✨"
+        "WinGo Result History ကို Screenshot ရိုက်ပြီး ပို့ပေးပါခင်ဗျာ။"
     )
     bot.send_message(m.chat.id, welcome, parse_mode="Markdown", reply_markup=kb)
 
 @bot.message_handler(content_types=['photo'])
 def handle_prediction(m):
-    status_msg = bot.reply_to(m, "🔍 **AI က Pattern ကို ဖတ်နေပါတယ်...**")
+    status_msg = bot.reply_to(m, "🔍 AI က Pattern ကို ဖတ်နေပါတယ်...")
     try:
         file_info = bot.get_file(m.photo[-1].file_id)
         response = requests.get(f"https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}")
@@ -88,7 +85,7 @@ def handle_prediction(m):
             color_emoji = "🟢 (Green)" if prediction == "SMALL" else "🔴 (Red)"
             res = (
                 f"🎯 **Next Prediction Result**\n"
-                f"━━━━━━━━━━━━━━━━━━━━\n"
+                f"━━━━━━━━━━━━━━━\n"
                 f"🎰 **Next Bet:** `{prediction}` {color_emoji}\n"
                 f"🧠 **Logic:** {logic}\n"
                 f"💸 **Strategy:** 3x Martingale\n\n"
@@ -103,11 +100,6 @@ def handle_prediction(m):
 
 # --- [ 5. RUN BOT ] ---
 if __name__ == "__main__":
-    # Flask ကို နောက်ကွယ်မှာ run မယ်
-    t = Thread(target=run_flask)
-    t.daemon = True
-    t.start()
-    
-    # Bot Polling စတင်မယ်
+    Thread(target=run_server).start()
     print("Bot is Polling...")
-    bot.infinity_polling(timeout=20, long_polling_timeout=10)
+    bot.infinity_polling()
