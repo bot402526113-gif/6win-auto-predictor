@@ -1,4 +1,4 @@
-import os
+import os  # 'i' အသေး ပြောင်းထားတယ်
 import telebot
 import requests
 from PIL import Image
@@ -11,14 +11,16 @@ from flask import Flask
 from telebot import types
 
 # --- [ 1. KEEP-ALIVE SERVER FOR RENDER ] ---
-app = Flask('')
+app = Flask(__name__) # __name__ သုံးတာ ပိုစိတ်ချရတယ်
 
 @app.route('/')
 def home():
-    return "WinGo Free Bot is Online! ✅"
+    return "WinGo Free Bot is Online! "
 
 def run_server():
-    app.run(host='0.0.0.0', port=8080)
+    # Render port requirement အတွက်
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
 
 # --- [ 2. CONFIGURATION ] ---
 TOKEN = '8641622144:AAGO_f5sc3_V0yho8hTnH_VRX_aH7Xx6BOw'
@@ -38,21 +40,17 @@ def manage_cloud_data(raw_text):
     try:
         data = {"pattern": raw_text, "created_at": datetime.now().isoformat()}
         supabase.table("pattern_history").insert(data).execute()
-        # တစ်ပတ်ကျော်တာတွေကို ရှင်းထုတ်မယ်
         one_week_ago = (datetime.now() - timedelta(days=7)).isoformat()
         supabase.table("pattern_history").delete().lt("created_at", one_week_ago).execute()
     except: pass
 
 def get_prediction(history):
     if len(history) < 3: return None, None
-    # Formula 1: Dragon
     if history[0] == history[1] == history[2]:
         return history[0].upper(), "Dragon Trend"
-    # Formula 2: ZigZag
     if history[0] != history[1] and history[1] != history[2]:
         pred = "SMALL" if history[0] == "Big" else "BIG"
         return pred, "ZigZag Strategy"
-    # Formula 3: Double-Double
     if len(history) >= 4:
         if history[0] == history[1] and history[2] == history[3] and history[0] != history[2]:
             return history[0].upper(), "Double-Double"
@@ -62,25 +60,24 @@ def get_prediction(history):
 @bot.message_handler(commands=['start'])
 def start(message):
     markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("🔗 Register Now (Account ဖွင့်ရန်)", url=INVITE_LINK))
-    markup.add(types.InlineKeyboardButton("📢 Join Channel (Link)", url=CHANNEL_LINK))
+    markup.add(types.InlineKeyboardButton(" Register Now", url=INVITE_LINK))
+    markup.add(types.InlineKeyboardButton(" Join Channel", url=CHANNEL_LINK))
     
     welcome_text = (
-        "🤖 **WinGo Free Bot မှ ကြိုဆိုပါတယ်**\n"
+        " **WinGo Free Bot မှ ကြိုဆိုပါတယ်**\n"
         "----------------------------------\n"
-        "📸 **အသုံးပြုနည်း:**\n"
-        "6Win Game ထဲက WinGo (1min) ရဲ့ **Result History** ဇယားကို Screenshot ရိုက်ပြီး ပို့ပေးပါ။ AI က Pattern ကို ဖတ်ပြီး နောက်တစ်ပွဲကို ခန့်မှန်းပေးပါလိမ့်မယ်။\n\n"
-        "💰 **ဆတိုးထိုးနည်း (Money Management):**\n"
-        "ရှုံးရင် အောက်ပါအတိုင်း 3 ဆ တိုးထိုးပါ -\n"
-        "👉 **100 > 300 > 900 > 2700 > 8100**\n\n"
-        f"👨‍💻 **Admin:** {ADMIN_ACC}\n"
+        " **အသုံးပြုနည်း:**\n"
+        "6Win Game ထဲက WinGo (1min) ရဲ့ **Result History** ကို Screenshot ပို့ပေးပါ။\n\n"
+        " **ဆတိုးထိုးနည်း:**\n"
+        "100 > 300 > 900 > 2700 > 8100\n\n"
+        f" **Admin:** {ADMIN_ACC}\n"
         "----------------------------------"
     )
     bot.send_message(message.chat.id, welcome_text, parse_mode="Markdown", reply_markup=markup)
 
 @bot.message_handler(content_types=['photo'])
 def handle_prediction(message):
-    status_msg = bot.reply_to(message, "🔍 AI စနစ်က Pattern ကို ဖတ်နေပါတယ်၊ ခဏစောင့်ပါ...")
+    status_msg = bot.reply_to(message, " AI က Pattern ကို ဖတ်နေပါတယ်...")
     try:
         file_info = bot.get_file(message.photo[-1].file_id)
         response = requests.get(f"https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}")
@@ -97,22 +94,16 @@ def handle_prediction(message):
         prediction, logic = get_prediction(history)
         
         if prediction:
-            res = (f"🎯 **WinGo Next Prediction** 🎯\n"
-                   f"------------------------------\n"
-                   f"🔥 **Next Bet:** 【 **{prediction}** 】\n"
-                   f"🧠 **Logic:** {logic}\n"
-                   f"💹 **Strategy:** 3x Martingale\n"
-                   f"------------------------------\n"
-                   f"🔗 [Register Now]({INVITE_LINK})")
+            res = (f" **WinGo Next Prediction**\n"
+                   f" **Next Bet:**  **{prediction}** \n"
+                   f" **Logic:** {logic}\n"
+                   f" **Strategy:** 3x Martingale")
         else:
-            res = "⚠️ **Risk များနေတယ်၊ တစ်ပွဲ Out ပါ**\n\nဒီ Pattern က ခန့်မှန်းရခက်နေလို့ အခုတစ်ပွဲကို ကျော်လိုက်ပါ။ ပုံအသစ်ပြန်ပို့ပေးပါ။"
+            res = " **Risk များနေတယ်၊ တစ်ပွဲ Out ပါ**"
         
-        bot.edit_message_text(res, message.chat.id, status_msg.message_id, parse_mode="Markdown", disable_web_page_preview=True)
+        bot.edit_message_text(res, message.chat.id, status_msg.message_id, parse_mode="Markdown")
     except Exception as e:
-        if "tesseract" in str(e).lower():
-            bot.edit_message_text("❌ Error: စက်ထဲမှာ ပုံဖတ်စနစ် (Tesseract) ထည့်မထားရသေးပါ။ Render Environment မှာ APT_PACKAGES ထည့်ပေးပါ။", message.chat.id, status_msg.message_id)
-        else:
-            bot.edit_message_text(f"❌ Error: {e}", message.chat.id, status_msg.message_id)
+        bot.edit_message_text(f" Error: {e}", message.chat.id, status_msg.message_id)
 
 # --- [ 5. EXECUTION ] ---
 if __name__ == "__main__":
