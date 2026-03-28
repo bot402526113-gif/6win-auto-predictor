@@ -2,6 +2,7 @@ import os
 import telebot
 import requests
 import time
+import asyncio
 import logging
 from threading import Thread
 from flask import Flask
@@ -28,17 +29,18 @@ LINKS = {
     "REGISTER_GUIDE": "https://t.me/Dangai_colour/7"
 }
 
-# --- [ 2. ANTI-SLEEP ENGINE ] ---
-def keep_alive_engine():
-    print("🚀 Anti-Sleep Engine Started...")
+# --- [ 2. SELF-PING ENGINE (၂၄ နာရီ မအိပ်အောင် လုပ်သည့်စနစ်) ] ---
+async def self_ping_loop():
+    """အပြင် App မလိုဘဲ ၅ မိနစ်တစ်ခါ ကိုယ့်ကိုယ်ကို လှမ်းနှိုးမည့်စနစ်"""
+    await asyncio.sleep(15) # Server တက်လာအောင် ခေတ္တစောင့်မယ်
     while True:
         try:
-            # ၅ မိနစ်တစ်ခါ ကိုယ့် App ကိုယ် ပြန်ခေါက်နှိုးမယ်
+            # Render App URL ကို လှမ်းခေါ်ခြင်းဖြင့် မအိပ်အောင်တားဆီးမယ်
             requests.get(APP_URL, timeout=20)
-            logging.info("💤 Ping Success: Bot is Awake!")
+            logging.info("💤 Self-Ping: Keeping the bot immortal!")
         except Exception as e:
-            logging.warning(f"⚠️ Ping Warning: {e}")
-        time.sleep(300)
+            logging.error(f"⚠️ Self-Ping Failed: {e}")
+        await asyncio.sleep(300) # ၅ မိနစ်တစ်ခါ ပုံမှန်နှိုးမယ်
 
 # --- [ 3. ADVANCED FORMULA LOGIC ] ---
 def get_advanced_prediction(history):
@@ -113,27 +115,28 @@ def handle_msg(m):
                f"⚠️ **ရှုံးလျှင် ၃ ဆတိုးလောင်းပါ** 🚀")
         bot.reply_to(m, res, parse_mode="Markdown")
 
-# --- [ 5. RENDER WEB SERVER ] ---
+# --- [ 5. WEB SERVER FOR RENDER ] ---
 @app.route('/')
 def home(): 
-    return "BOT IS ACTIVE & RUNNING 🟢", 200
+    return "✅ SYSTEM IS FULLY ACTIVE", 200
 
 def run_flask():
-    # Render Port 10000 ကို အမိဖမ်းဖို့
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 # --- [ 6. MAIN RUNNER WITH AUTO-RESTART ] ---
 if __name__ == "__main__":
-    # Background Threads
+    # Flask Web Server ကို Thread နဲ့ run မယ်
     Thread(target=run_flask, daemon=True).start()
-    Thread(target=keep_alive_engine, daemon=True).start()
-    
-    print("🤖 Bot is Starting...")
+
+    # Self-Ping Loop ကို Background မှာ run မယ်
+    loop = asyncio.new_event_loop()
+    Thread(target=lambda: loop.run_until_complete(self_ping_loop()), daemon=True).start()
+
+    print("🤖 WinGo Bot is now Immortal...")
     while True:
         try:
-            # Polling System
-            bot.infinity_polling(timeout=30, long_polling_timeout=20)
+            bot.infinity_polling(timeout=20, long_polling_timeout=10)
         except Exception as e:
-            logging.error(f"❌ Error: {e}. Restarting in 5s...")
+            logging.error(f"❌ Connection Error: {e}. Restarting in 5s...")
             time.sleep(5)
