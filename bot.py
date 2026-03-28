@@ -26,38 +26,30 @@ LINKS = {
     "REGISTER_GUIDE": "https://t.me/Dangai_colour/7"
 }
 
-# --- [ 2. ANTI-SLEEP PING SYSTEM ] ---
-def keep_alive():
+# --- [ 2. ANTI-SLEEP ENGINE - မအိပ်အောင် နှိုးဆော်ခြင်း ] ---
+def keep_alive_engine():
+    print("🚀 Anti-Sleep Engine Started...")
     while True:
         try:
-            requests.get(APP_URL, timeout=10)
-            print("💤 Anti-Sleep: Bot is active and awake!")
-        except:
-            print("⚠️ Anti-Sleep: Connection error, retrying...")
-        time.sleep(300) 
+            # ၅ မိနစ်တစ်ခါ ကိုယ့် App ကိုယ် ပြန်ခေါ်မယ်
+            requests.get(APP_URL, timeout=20)
+            print("💤 Ping Success: Bot is Awake!")
+        except Exception as e:
+            print(f"⚠️ Ping Failed: {e}")
+        time.sleep(300) # 300s = 5 mins
 
-# --- [ 3. ADVANCED FORMULA LOGIC ] ---
+# --- [ 3. FORMULA LOGIC ] ---
 def get_advanced_prediction(history):
     if len(history) < 2: return None, None
-    
-    # Formula 1: Dragon Trend (🔴/🟢 ဆက်တိုက်ထွက်လျှင် လိုက်မည်)
     if len(history) >= 3 and history[0] == history[1] == history[2]:
         return history[0], "Dragon Trend 🔥"
-    
-    # Formula 2: ZigZag Logic (တစ်လှည့်စီထွက်လျှင် ပြောင်းပြန်ယူ)
     if len(history) >= 3 and history[0] != history[1] and history[1] != history[2]:
         pred = "BIG" if history[0] == "SMALL" else "SMALL"
         return pred, "ZigZag Strategy ⚡"
-    
-    # Formula 3: 2-1 Pattern (B B S -> B)
-    if len(history) >= 3 and history[0] == history[1] and history[1] != history[2]:
-        return history[0], "Double Logic ✨"
-
-    # Default: Mirror Strategy (နောက်ဆုံးထွက်တာကို ပြောင်းပြန်ယူ)
     pred = "BIG" if history[0] == "SMALL" else "SMALL"
     return pred, "Mirror Strategy 🔮"
 
-# --- [ 4. ADMIN & USER HANDLERS ] ---
+# --- [ 4. HANDLERS ] ---
 
 @bot.message_handler(commands=['admin'])
 def admin_panel(m):
@@ -65,7 +57,7 @@ def admin_panel(m):
         kb = types.InlineKeyboardMarkup(row_width=1)
         kb.add(
             types.InlineKeyboardButton("📊 Bot Status", callback_data="status"),
-            types.InlineKeyboardButton("📢 Broadcast (စာလှမ်းပို့ရန်)", callback_data="bc"),
+            types.InlineKeyboardButton("📢 Broadcast", callback_data="bc"),
             types.InlineKeyboardButton("👥 User Count", callback_data="u_count")
         )
         bot.send_message(m.chat.id, "👨‍💻 **Admin Control Panel**", parse_mode="Markdown", reply_markup=kb)
@@ -73,21 +65,21 @@ def admin_panel(m):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     if call.data == "status":
-        bot.answer_callback_query(call.id, "System Online & Awake 🟢")
+        bot.answer_callback_query(call.id, "Bot is Live! 🟢")
     elif call.data == "u_count":
-        bot.answer_callback_query(call.id, f"Current Users: {len(user_list)}", show_alert=True)
+        bot.answer_callback_query(call.id, f"Users: {len(user_list)}", show_alert=True)
     elif call.data == "bc":
-        msg = bot.send_message(call.message.chat.id, "📢 **Broadcast လုပ်မည့်စာကို ပို့ပေးပါ။**")
+        msg = bot.send_message(call.message.chat.id, "📢 **ပို့ချင်တဲ့စာကို ရိုက်ပေးပါ။**")
         bot.register_next_step_handler(msg, process_broadcast)
 
 def process_broadcast(m):
     count = 0
     for user in list(user_list):
         try:
-            bot.send_message(user, f"📢 **MESSAGE FROM ADMIN**\n\n{m.text}", parse_mode="Markdown")
+            bot.send_message(user, f"📢 **ADMIN MESSAGE**\n\n{m.text}", parse_mode="Markdown")
             count += 1
         except: pass
-    bot.send_message(m.chat.id, f"✅ User {count} ယောက်ထံ စာပို့ပြီးပါပြီ!")
+    bot.send_message(m.chat.id, f"✅ User {count} ယောက်ထံ ပို့ပြီးပါပြီ!")
 
 @bot.message_handler(commands=['start'])
 def start(m):
@@ -97,12 +89,12 @@ def start(m):
         types.InlineKeyboardButton("🎮 6Lottery Acc ဖောက်ရန်", url=LINKS["6L"]),
         types.InlineKeyboardButton("🎰 CK Lottery Acc ဖောက်ဆော့ရန်", url=LINKS["CK"]),
         types.InlineKeyboardButton("🔥 777 BigWin Acc ဖောက်ရန်", url=LINKS["777"]),
-        types.InlineKeyboardButton("📝 Acc ဖောက်နည်း ကြည့်ရန်", url=LINRLS["REGISTER_GUIDE"]),
+        types.InlineKeyboardButton("📝 Acc ဖောက်နည်း ကြည့်ရန်", url=LINKS["REGISTER_GUIDE"]),
         types.InlineKeyboardButton("💰 ငွေဖြည့်နည်း ကြည့်ရန်", url=LINKS["TOPUP"]),
         types.InlineKeyboardButton("💳 Acc ချိတ်/ငွေထုတ်နည်း", url=LINKS["BIND"]),
-        types.InlineKeyboardButton("👨‍💻 Contact Admin (Or) Agent", url=f"https://t.me/{ADMIN_USERNAME[1:]}")
+        types.InlineKeyboardButton("👨‍💻 Contact Admin", url=f"https://t.me/{ADMIN_USERNAME[1:]}")
     )
-    bot.send_message(m.chat.id, "🌟 **WinGo Prediction Bot** 🌟\n\n🎯 **Signal ရယူရန်:**\nရလဒ်ဇယား၏ **အောက်ဆုံးမှ အပေါ်ဆုံးသို့** ၅ ပွဲစာ ရိုက်ပို့ပါ။\nဥပမာ - `B S B B S`", parse_mode="Markdown", reply_markup=kb)
+    bot.send_message(m.chat.id, "🌟 **WinGo Prediction Bot** 🌟\n\n🎯 **Signal ရယူရန်:** ၅ ပွဲစာ ရိုက်ပို့ပါ။\nဥပမာ - `B S B B S`", parse_mode="Markdown", reply_markup=kb)
 
 @bot.message_handler(func=lambda message: True)
 def handle_msg(m):
@@ -114,22 +106,23 @@ def handle_msg(m):
         pred, logic_name = get_advanced_prediction(history)
         emoji = "🔴" if pred == "BIG" else "🟢"
         res = (f"🎯 **WIN GO SIGNAL**\n"
-               f"━━━━━━━━━━━━━━\n"
                f"🎰 Next Bet: **{pred}** {emoji}\n"
-               f"🧠 Logic: **{logic_name}**\n"
+               f"🧠 Logic: {logic_name}\n"
                f"💸 Strategy: 3x Martingale\n\n"
-               f"⚠️ **ရှုံးလျှင် 3 ဆတိုးလောင်းပါ** 🚀\n"
-               f"━━━━━━━━━━━━━━")
+               f"⚠️ **ရှုံးလျှင် ၃ ဆတိုးလောင်းပါ** 🚀")
         bot.reply_to(m, res, parse_mode="Markdown")
-    elif history:
-        bot.reply_to(m, "❌ Formula မှန်ရန် အနည်းဆုံး ၂ ပွဲ သို့မဟုတ် ၅ ပွဲစာ ရိုက်ပို့ပေးပါ။")
 
 # --- [ 5. RENDER SERVER ] ---
 @app.route('/')
-def home(): return "BOT IS LIVE & AWAKE 🟢"
+def home(): return "BOT IS ACTIVE & RUNNING 🟢"
 
 if __name__ == "__main__":
-    Thread(target=keep_alive).start()
+    # ၁။ အိပ်မပျော်အောင် နိုးဆော်မည့် Thread
+    Thread(target=keep_alive_engine, daemon=True).start()
+    
+    # ၂။ Render Port 10000 မှာ Server run မည်
     port = int(os.environ.get("PORT", 10000))
-    Thread(target=lambda: app.run(host='0.0.0.0', port=port)).start()
-    bot.infinity_polling()
+    Thread(target=lambda: app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)).start()
+    
+    # ၃။ Bot Polling စတင်ခြင်း
+    bot.infinity_polling(timeout=10, long_polling_timeout=5)
