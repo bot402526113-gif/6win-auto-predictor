@@ -26,31 +26,33 @@ LINKS = {
     "REGISTER_GUIDE": "https://t.me/Dangai_colour/7"
 }
 
-# --- [ 2. ANTI-SLEEP ENGINE - မအိပ်အောင် နှိုးဆော်ခြင်း ] ---
+# --- [ 2. ANTI-SLEEP ENGINE ] ---
 def keep_alive_engine():
+    """Bot ကို ၅ မိနစ်တစ်ခါ ပုတ်နှိုးပေးမယ့်စနစ်"""
     print("🚀 Anti-Sleep Engine Started...")
     while True:
         try:
-            # ၅ မိနစ်တစ်ခါ ကိုယ့် App ကိုယ် ပြန်ခေါ်မယ်
             requests.get(APP_URL, timeout=20)
-            print("💤 Ping Success: Bot is Awake!")
+            print("💤 Ping Success: Bot remains Awake!")
         except Exception as e:
-            print(f"⚠️ Ping Failed: {e}")
-        time.sleep(300) # 300s = 5 mins
+            print(f"⚠️ Ping Warning: {e}")
+        time.sleep(300)
 
-# --- [ 3. FORMULA LOGIC ] ---
+# --- [ 3. ADVANCED FORMULA LOGIC ] ---
 def get_advanced_prediction(history):
     if len(history) < 2: return None, None
+    # Dragon Trend
     if len(history) >= 3 and history[0] == history[1] == history[2]:
         return history[0], "Dragon Trend 🔥"
+    # ZigZag Logic
     if len(history) >= 3 and history[0] != history[1] and history[1] != history[2]:
         pred = "BIG" if history[0] == "SMALL" else "SMALL"
         return pred, "ZigZag Strategy ⚡"
+    # Default: Mirror Strategy
     pred = "BIG" if history[0] == "SMALL" else "SMALL"
     return pred, "Mirror Strategy 🔮"
 
 # --- [ 4. HANDLERS ] ---
-
 @bot.message_handler(commands=['admin'])
 def admin_panel(m):
     if m.from_user.id == ADMIN_ID:
@@ -112,17 +114,24 @@ def handle_msg(m):
                f"⚠️ **ရှုံးလျှင် ၃ ဆတိုးလောင်းပါ** 🚀")
         bot.reply_to(m, res, parse_mode="Markdown")
 
-# --- [ 5. RENDER SERVER ] ---
+# --- [ 5. RENDER WEB SERVER ] ---
 @app.route('/')
 def home(): return "BOT IS ACTIVE & RUNNING 🟢"
 
+def run_flask():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+
+# --- [ 6. MAIN RUNNER WITH AUTO-RESTART ] ---
 if __name__ == "__main__":
-    # ၁။ အိပ်မပျော်အောင် နိုးဆော်မည့် Thread
+    # Flask နဲ့ Anti-sleep ကို Background မှာ စတင်မယ်
+    Thread(target=run_flask, daemon=True).start()
     Thread(target=keep_alive_engine, daemon=True).start()
     
-    # ၂။ Render Port 10000 မှာ Server run မည်
-    port = int(os.environ.get("PORT", 10000))
-    Thread(target=lambda: app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)).start()
-    
-    # ၃။ Bot Polling စတင်ခြင်း
-    bot.infinity_polling(timeout=10, long_polling_timeout=5)
+    print("🤖 Bot is Starting...")
+    while True:
+        try:
+            bot.infinity_polling(timeout=20, long_polling_timeout=10)
+        except Exception as e:
+            print(f"❌ Error: {e}. Restarting in 5s...")
+            time.sleep(5)
