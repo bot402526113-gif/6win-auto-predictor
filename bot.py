@@ -2,6 +2,7 @@ import os
 import telebot
 import requests
 import time
+import logging
 from threading import Thread
 from flask import Flask
 from telebot import types
@@ -15,6 +16,7 @@ APP_URL = "https://sixwin-auto-predictor-1.onrender.com"
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 user_list = set()
+logging.basicConfig(level=logging.INFO)
 
 # Links Configuration
 LINKS = {
@@ -28,27 +30,24 @@ LINKS = {
 
 # --- [ 2. ANTI-SLEEP ENGINE ] ---
 def keep_alive_engine():
-    """Bot ကို ၅ မိနစ်တစ်ခါ ပုတ်နှိုးပေးမယ့်စနစ်"""
     print("🚀 Anti-Sleep Engine Started...")
     while True:
         try:
+            # ၅ မိနစ်တစ်ခါ ကိုယ့် App ကိုယ် ပြန်ခေါက်နှိုးမယ်
             requests.get(APP_URL, timeout=20)
-            print("💤 Ping Success: Bot remains Awake!")
+            logging.info("💤 Ping Success: Bot is Awake!")
         except Exception as e:
-            print(f"⚠️ Ping Warning: {e}")
+            logging.warning(f"⚠️ Ping Warning: {e}")
         time.sleep(300)
 
 # --- [ 3. ADVANCED FORMULA LOGIC ] ---
 def get_advanced_prediction(history):
     if len(history) < 2: return None, None
-    # Dragon Trend
     if len(history) >= 3 and history[0] == history[1] == history[2]:
         return history[0], "Dragon Trend 🔥"
-    # ZigZag Logic
     if len(history) >= 3 and history[0] != history[1] and history[1] != history[2]:
         pred = "BIG" if history[0] == "SMALL" else "SMALL"
         return pred, "ZigZag Strategy ⚡"
-    # Default: Mirror Strategy
     pred = "BIG" if history[0] == "SMALL" else "SMALL"
     return pred, "Mirror Strategy 🔮"
 
@@ -116,22 +115,25 @@ def handle_msg(m):
 
 # --- [ 5. RENDER WEB SERVER ] ---
 @app.route('/')
-def home(): return "BOT IS ACTIVE & RUNNING 🟢"
+def home(): 
+    return "BOT IS ACTIVE & RUNNING 🟢", 200
 
 def run_flask():
+    # Render Port 10000 ကို အမိဖမ်းဖို့
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 # --- [ 6. MAIN RUNNER WITH AUTO-RESTART ] ---
 if __name__ == "__main__":
-    # Flask နဲ့ Anti-sleep ကို Background မှာ စတင်မယ်
+    # Background Threads
     Thread(target=run_flask, daemon=True).start()
     Thread(target=keep_alive_engine, daemon=True).start()
     
     print("🤖 Bot is Starting...")
     while True:
         try:
-            bot.infinity_polling(timeout=20, long_polling_timeout=10)
+            # Polling System
+            bot.infinity_polling(timeout=30, long_polling_timeout=20)
         except Exception as e:
-            print(f"❌ Error: {e}. Restarting in 5s...")
+            logging.error(f"❌ Error: {e}. Restarting in 5s...")
             time.sleep(5)
